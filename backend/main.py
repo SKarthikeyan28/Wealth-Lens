@@ -1,7 +1,9 @@
 import logging
 
 from fastapi import FastAPI
+from fastapi.routing import APIRouter
 
+from backend.common.errors import AppError, app_error_handler
 from backend.common.logging import configure_logging
 from backend.common.middleware import CorrelationIdMiddleware
 
@@ -15,11 +17,17 @@ app = FastAPI(
 )
 
 app.add_middleware(CorrelationIdMiddleware)
+app.add_exception_handler(AppError, app_error_handler)
+
+api_v1 = APIRouter(prefix="/api/v1")
 
 
-@app.get("/")
-def root() -> dict[str, str]:
+@api_v1.get("/ping")
+def ping() -> dict[str, str]:
     return {"status": "ok", "version": "0.1.0"}
+
+
+app.include_router(api_v1)
 
 
 @app.get("/health")
@@ -29,5 +37,4 @@ def health() -> dict[str, str]:
 
 @app.get("/ready")
 async def ready() -> dict[str, str]:
-    # Phase 0.3+: check DB + Redis connectivity here once sessions are wired
     return {"status": "ready"}
