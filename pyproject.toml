@@ -1,0 +1,14 @@
+[tool.ruff]
+line-length = 88
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]   # pycodestyle errors, pyflakes, isort
+
+[tool.mypy]
+strict = true
+python_version = "3.12"
+files = ["backend"]
+
+[tool.pytest.ini_options]
+testpaths = ["backend/tests"]
