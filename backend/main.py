@@ -3,6 +3,7 @@ import logging
 from fastapi import FastAPI
 from fastapi.routing import APIRouter
 
+from backend.common.disclaimer import DISCLAIMER
 from backend.common.errors import AppError, app_error_handler
 from backend.common.logging import configure_logging
 from backend.common.middleware import CorrelationIdMiddleware
@@ -12,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI(
     title="Wealth-Lens",
-    description="SG Personal Finance Optimizer — educational analysis tool, not financial advice.",
+    description=f"SG Personal Finance Optimizer\n\n> {DISCLAIMER}",
     version="0.1.0",
 )
 
