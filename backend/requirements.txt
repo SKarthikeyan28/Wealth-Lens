@@ -1,3 +1,7 @@
 fastapi==0.111.0
 uvicorn[standard]==0.29.0
 python-json-logger==2.0.7
+argon2-cffi==23.1.0
+sqlalchemy[asyncio]==2.0.30
+asyncpg==0.29.0
+pydantic[email]==2.7.1
