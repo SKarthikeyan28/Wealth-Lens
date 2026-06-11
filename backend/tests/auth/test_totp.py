@@ -1,13 +1,13 @@
 import uuid
-from collections.abc import AsyncGenerator, Callable
+from collections.abc import AsyncGenerator, Awaitable, Callable
 from datetime import datetime, timezone
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from fastapi.testclient import TestClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from backend.auth.dependencies import get_current_user
 from backend.auth.models import RecoveryCode, User
-from backend.auth.router import get_current_user
 from backend.auth.tokens import create_preauth_token
 from backend.common.database import get_db
 from backend.main import app
@@ -20,7 +20,9 @@ def _make_user(totp_enabled: bool = False, totp_secret: str | None = None) -> Us
     u.id = _USER_ID
     u.email = "user@example.com"
     u.totp_enabled = totp_enabled
-    u.totp_secret = totp_secret if totp_secret is not None else ("encrypted" if totp_enabled else None)
+    u.totp_secret = (
+        totp_secret if totp_secret is not None else ("encrypted" if totp_enabled else None)
+    )
     u.created_at = datetime.now(timezone.utc)
     return u
 
@@ -60,7 +62,7 @@ def _make_db_multi(
     return override
 
 
-def _auth_override(user: User) -> Callable[[], User]:
+def _auth_override(user: User) -> Callable[[], Awaitable[User]]:
     async def override() -> User:
         return user
 

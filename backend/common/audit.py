@@ -15,11 +15,13 @@ class AuditLog(Base):
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     actor_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False)
-    action: Mapped[str] = mapped_column(Text, nullable=False)        # CREATE | UPDATE | DELETE
-    entity_type: Mapped[str] = mapped_column(Text, nullable=False)   # account | income | expense | …
+    # action: CREATE | UPDATE | DELETE
+    action: Mapped[str] = mapped_column(Text, nullable=False)
+    # entity_type: account | income | expense | holding | goal
+    entity_type: Mapped[str] = mapped_column(Text, nullable=False)
     entity_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False)
-    old_data: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
-    new_data: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    old_data: Mapped[dict[str, object] | None] = mapped_column(JSONB, nullable=True)
+    new_data: Mapped[dict[str, object] | None] = mapped_column(JSONB, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         sa.TIMESTAMP(timezone=True), server_default=func.now(), nullable=False
     )
@@ -32,8 +34,8 @@ async def write_audit(
     action: str,
     entity_type: str,
     entity_id: uuid.UUID,
-    old_data: dict | None = None,
-    new_data: dict | None = None,
+    old_data: dict[str, object] | None = None,
+    new_data: dict[str, object] | None = None,
 ) -> None:
     db.add(
         AuditLog(

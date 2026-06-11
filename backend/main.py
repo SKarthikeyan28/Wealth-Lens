@@ -3,6 +3,7 @@ import logging
 from fastapi import FastAPI
 from fastapi.routing import APIRouter
 
+from backend.accounts.router import router as accounts_router
 from backend.auth.router import router as auth_router
 from backend.common.disclaimer import DISCLAIMER
 from backend.common.errors import AppError, app_error_handler
@@ -24,6 +25,7 @@ app.add_exception_handler(AppError, app_error_handler)
 api_v1 = APIRouter(prefix="/api/v1")
 
 api_v1.include_router(auth_router)
+api_v1.include_router(accounts_router)
 
 
 @api_v1.get("/ping")

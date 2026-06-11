@@ -35,6 +35,7 @@ def check_password_strength(plain: str) -> None:
     if not _STRENGTH_RE.match(plain):
         raise AppError(
             "WEAK_PASSWORD",
-            "Password must contain uppercase, lowercase, a digit, and a special character (!@#$%^&*).",
+            "Password must contain uppercase, lowercase, a digit, and a "
+            "special character (!@#$%^&*).",
             422,
         )

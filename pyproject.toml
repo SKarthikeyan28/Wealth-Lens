@@ -1,14 +1,22 @@
 [tool.ruff]
-line-length = 88
+line-length = 100
 target-version = "py312"
 
 [tool.ruff.lint]
 select = ["E", "F", "I"]   # pycodestyle errors, pyflakes, isort
 
+[tool.ruff.lint.isort]
+known-first-party = ["backend"]
+
 [tool.mypy]
 strict = true
 python_version = "3.12"
 files = ["backend"]
+
+# Migration files are generated artifacts; allow untyped library calls (e.g. JSONB()).
+[[tool.mypy.overrides]]
+module = "backend.alembic.versions.*"
+disallow_untyped_calls = false
 
 [tool.pytest.ini_options]
 testpaths = ["backend/tests"]

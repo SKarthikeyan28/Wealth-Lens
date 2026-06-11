@@ -3,18 +3,18 @@ import os
 from logging.config import fileConfig
 
 from alembic import context
-from sqlalchemy import pool
+from sqlalchemy import Connection, pool
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
-from backend.common.database import Base
+import backend.accounts.models  # noqa: F401
 
 # All models must be imported here so their tables register on Base.metadata.
 import backend.auth.models  # noqa: F401
-import backend.accounts.models  # noqa: F401
 import backend.cashflow.models  # noqa: F401
 import backend.common.audit  # noqa: F401
 import backend.crra.models  # noqa: F401
 import backend.market.models  # noqa: F401
+from backend.common.database import Base
 
 config = context.config
 
@@ -40,7 +40,7 @@ def run_migrations_offline() -> None:
         context.run_migrations()
 
 
-def _do_run_migrations(connection):
+def _do_run_migrations(connection: Connection) -> None:
     context.configure(connection=connection, target_metadata=target_metadata)
     with context.begin_transaction():
         context.run_migrations()
