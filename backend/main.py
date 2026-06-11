@@ -3,6 +3,7 @@ import logging
 from fastapi import FastAPI
 from fastapi.routing import APIRouter
 
+from backend.accounts.router import holdings_router
 from backend.accounts.router import router as accounts_router
 from backend.auth.router import router as auth_router
 from backend.cashflow.router import expense_router, income_router
@@ -29,6 +30,7 @@ api_v1.include_router(auth_router)
 api_v1.include_router(accounts_router)
 api_v1.include_router(income_router)
 api_v1.include_router(expense_router)
+api_v1.include_router(holdings_router)
 
 
 @api_v1.get("/ping")

@@ -5,6 +5,7 @@ from decimal import Decimal
 from pydantic import BaseModel, Field, field_validator
 
 from backend.accounts.models import AccountType
+from backend.market.models import AssetClass
 
 
 class AccountCreate(BaseModel):
@@ -36,6 +37,33 @@ class AccountResponse(BaseModel):
     account_type: AccountType
     currency: str
     cash_balance: Decimal
+    created_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+class HoldingCreate(BaseModel):
+    account_id: uuid.UUID
+    ticker: str = Field(min_length=1, max_length=20)
+    exchange: str | None = None
+    asset_class: AssetClass
+    currency: str = Field(min_length=3, max_length=3)
+    name: str | None = None
+    quantity: Decimal = Field(ge=0)
+    avg_cost: Decimal = Field(ge=0)
+
+    @field_validator("currency")
+    @classmethod
+    def _upper_holding(cls, v: str) -> str:
+        return v.upper()
+
+
+class HoldingResponse(BaseModel):
+    id: uuid.UUID
+    account_id: uuid.UUID
+    security_id: uuid.UUID
+    quantity: Decimal
+    avg_cost: Decimal
     created_at: datetime
 
     model_config = {"from_attributes": True}
