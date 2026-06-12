@@ -25,6 +25,10 @@ async def test_duplicate_holding_rolls_back_fully(db_session: AsyncSession) -> N
     ticker = f"TST{uuid.uuid4().hex[:8].upper()}"
 
     db.add(User(id=user_id, email=f"hold-{uuid.uuid4().hex}@example.com", password_hash="x"))
+    # Flush the user before adding the account: there is no relationship() between
+    # them, only a bare user_id FK column, so the unit-of-work won't auto-order the
+    # inserts. Flushing here guarantees the user row exists before the account FK.
+    await db.flush()
     db.add(
         Account(
             id=account_id,

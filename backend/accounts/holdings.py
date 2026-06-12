@@ -48,6 +48,11 @@ async def create_holding(db: AsyncSession, user_id: uuid.UUID, data: HoldingCrea
         currency=data.currency,
         name=data.name,
     )
+    # Flush so a newly-created security is INSERTed before the holding that FKs to
+    # it. There is no relationship() between Holding and Security (only a bare FK
+    # column), so the unit-of-work won't order these inserts itself. This stays in
+    # the same transaction — still one commit, atomicity intact.
+    await db.flush()
     holding = Holding(
         id=uuid.uuid4(),
         account_id=data.account_id,

@@ -43,6 +43,7 @@ class Expense(Base):
     __tablename__ = "expenses"
     __table_args__ = (
         CheckConstraint("amount >= 0", name="ck_expenses_amount"),
+        sa.UniqueConstraint("user_id", "dedupe_hash", name="uq_expenses_user_dedupe"),
     )
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -54,6 +55,8 @@ class Expense(Base):
     currency: Mapped[str] = mapped_column(CHAR(3), nullable=False, server_default="SGD")
     spent_on: Mapped[date] = mapped_column(Date(), nullable=False)
     note: Mapped[str | None] = mapped_column(Text, nullable=True)
+    # Fingerprint for idempotent CSV import; NULL for manual entries.
+    dedupe_hash: Mapped[str | None] = mapped_column(Text, nullable=True)
 
 
 class Goal(Base):

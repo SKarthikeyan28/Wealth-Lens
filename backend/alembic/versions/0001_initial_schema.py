@@ -16,22 +16,32 @@ down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
+# Enum types, declared once. create_type=False means create_table() will NOT
+# auto-create them — we create them explicitly (idempotently) in upgrade(), and
+# reference these same objects in the columns below.
+account_type = postgresql.ENUM(
+    "CASH", "BROKERAGE", "CPF_OA", "CPF_SA", "CPF_MA", "SRS",
+    name="account_type", create_type=False,
+)
+asset_class = postgresql.ENUM(
+    "EQUITY", "ETF", "REIT", "BOND", "PRECIOUS_METAL", "CASH_EQUIVALENT",
+    name="asset_class", create_type=False,
+)
+income_source = postgresql.ENUM(
+    "SALARY", "BONUS", "DIVIDEND", "MISC",
+    name="income_source", create_type=False,
+)
+
 
 def upgrade() -> None:
     op.execute("CREATE EXTENSION IF NOT EXISTS pgcrypto")
 
-    # Enum types — created before the tables that use them.
-    op.execute(
-        "CREATE TYPE account_type AS ENUM "
-        "('CASH','BROKERAGE','CPF_OA','CPF_SA','CPF_MA','SRS')"
-    )
-    op.execute(
-        "CREATE TYPE asset_class AS ENUM "
-        "('EQUITY','ETF','REIT','BOND','PRECIOUS_METAL','CASH_EQUIVALENT')"
-    )
-    op.execute(
-        "CREATE TYPE income_source AS ENUM ('SALARY','BONUS','DIVIDEND','MISC')"
-    )
+    # Enum types — created before the tables that use them. checkfirst avoids
+    # a duplicate-type error if a type already exists from a prior partial run.
+    bind = op.get_bind()
+    account_type.create(bind, checkfirst=True)
+    asset_class.create(bind, checkfirst=True)
+    income_source.create(bind, checkfirst=True)
 
     op.create_table(
         "users",
@@ -82,10 +92,7 @@ def upgrade() -> None:
                   server_default=sa.text("gen_random_uuid()")),
         sa.Column("user_id", postgresql.UUID(as_uuid=True), nullable=False),
         sa.Column("name", sa.Text(), nullable=False),
-        sa.Column("account_type",
-                  sa.Enum("CASH", "BROKERAGE", "CPF_OA", "CPF_SA", "CPF_MA", "SRS",
-                          name="account_type", create_type=False),
-                  nullable=False),
+        sa.Column("account_type", account_type, nullable=False),
         sa.Column("currency", sa.CHAR(3), nullable=False, server_default="SGD"),
         sa.Column("cash_balance", sa.Numeric(18, 2), nullable=False, server_default="0"),
         sa.Column("created_at", sa.TIMESTAMP(timezone=True),
@@ -101,10 +108,7 @@ def upgrade() -> None:
                   server_default=sa.text("gen_random_uuid()")),
         sa.Column("ticker", sa.Text(), nullable=False),
         sa.Column("name", sa.Text(), nullable=True),
-        sa.Column("asset_class",
-                  sa.Enum("EQUITY", "ETF", "REIT", "BOND", "PRECIOUS_METAL", "CASH_EQUIVALENT",
-                          name="asset_class", create_type=False),
-                  nullable=False),
+        sa.Column("asset_class", asset_class, nullable=False),
         sa.Column("exchange", sa.Text(), nullable=True),
         sa.Column("currency", sa.CHAR(3), nullable=False),
         sa.UniqueConstraint("ticker", "exchange", name="uq_securities_ticker_exchange"),
@@ -147,10 +151,7 @@ def upgrade() -> None:
         sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True,
                   server_default=sa.text("gen_random_uuid()")),
         sa.Column("user_id", postgresql.UUID(as_uuid=True), nullable=False),
-        sa.Column("source_type",
-                  sa.Enum("SALARY", "BONUS", "DIVIDEND", "MISC",
-                          name="income_source", create_type=False),
-                  nullable=False, server_default="SALARY"),
+        sa.Column("source_type", income_source, nullable=False, server_default="SALARY"),
         sa.Column("amount", sa.Numeric(18, 2), nullable=False),
         sa.Column("currency", sa.CHAR(3), nullable=False, server_default="SGD"),
         sa.Column("received_on", sa.Date(), nullable=False),
