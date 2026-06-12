@@ -11,6 +11,7 @@ from backend.common.disclaimer import DISCLAIMER
 from backend.common.errors import AppError, app_error_handler
 from backend.common.logging import configure_logging
 from backend.common.middleware import CorrelationIdMiddleware
+from backend.dashboard.router import router as dashboard_router
 from backend.ingestion.router import router as ingestion_router
 
 configure_logging()
@@ -33,6 +34,7 @@ api_v1.include_router(income_router)
 api_v1.include_router(expense_router)
 api_v1.include_router(holdings_router)
 api_v1.include_router(ingestion_router)
+api_v1.include_router(dashboard_router)
 
 
 @api_v1.get("/ping")
