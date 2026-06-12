@@ -50,3 +50,19 @@ class PriceHistory(Base):
     price_date: Mapped[date] = mapped_column(sa.Date(), nullable=False)
     close_price: Mapped[Decimal] = mapped_column(Numeric(18, 6), nullable=False)
     created_at: Mapped[datetime] = mapped_column(server_default=func.now())
+
+
+class FxRate(Base):
+    __tablename__ = "fx_rates"
+    __table_args__ = (
+        CheckConstraint("rate > 0", name="ck_fx_rates_rate"),
+        sa.UniqueConstraint(
+            "base_currency", "quote_currency", "as_of", name="uq_fx_rates_pair_date"
+        ),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    base_currency: Mapped[str] = mapped_column(CHAR(3), nullable=False)
+    quote_currency: Mapped[str] = mapped_column(CHAR(3), nullable=False)
+    rate: Mapped[Decimal] = mapped_column(Numeric(18, 8), nullable=False)
+    as_of: Mapped[date] = mapped_column(sa.Date(), nullable=False)

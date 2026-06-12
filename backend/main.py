@@ -1,6 +1,8 @@
 import logging
+import os
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.routing import APIRouter
 
 from backend.accounts.router import holdings_router
@@ -11,6 +13,7 @@ from backend.common.disclaimer import DISCLAIMER
 from backend.common.errors import AppError, app_error_handler
 from backend.common.logging import configure_logging
 from backend.common.middleware import CorrelationIdMiddleware
+from backend.dashboard.router import router as dashboard_router
 from backend.ingestion.router import router as ingestion_router
 
 configure_logging()
@@ -23,6 +26,17 @@ app = FastAPI(
 )
 
 app.add_middleware(CorrelationIdMiddleware)
+
+# Dev default allows the Next.js dev server; override with CORS_ORIGINS in prod.
+_cors_origins = os.environ.get("CORS_ORIGINS", "http://localhost:3000").split(",")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=_cors_origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 app.add_exception_handler(AppError, app_error_handler)
 
 api_v1 = APIRouter(prefix="/api/v1")
@@ -33,6 +47,7 @@ api_v1.include_router(income_router)
 api_v1.include_router(expense_router)
 api_v1.include_router(holdings_router)
 api_v1.include_router(ingestion_router)
+api_v1.include_router(dashboard_router)
 
 
 @api_v1.get("/ping")
