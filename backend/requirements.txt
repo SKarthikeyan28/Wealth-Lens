@@ -10,3 +10,4 @@ pyotp==2.9.0
 cryptography==42.0.8
 alembic==1.13.1
 python-multipart==0.0.9
+numpy==2.1.3
