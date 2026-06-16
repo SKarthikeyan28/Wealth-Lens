@@ -79,7 +79,10 @@ def optimal_weights(
         constraints.append(w >= 0)
 
     problem = cp.Problem(objective, constraints)
-    problem.solve()
+    # Pin the solver: we ship cvxpy-base + clarabel only (clarabel is cvxpy's
+    # default conic solver and the one with ARM wheels), so be explicit rather
+    # than relying on auto-selection finding an installed solver.
+    problem.solve(solver=cp.CLARABEL)
 
     if problem.status not in ("optimal", "optimal_inaccurate"):
         raise AppError(
