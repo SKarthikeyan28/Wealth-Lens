@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 
 import { AllocationChart } from "@/components/AllocationChart";
+import { CashflowCard } from "@/components/CashflowCard";
 import { NetWorthCard } from "@/components/NetWorthCard";
 import { clearTokens } from "@/lib/auth";
 import { useRequireAuth } from "@/lib/useRequireAuth";
@@ -38,6 +39,7 @@ export default function DashboardPage() {
       <div className="mt-8 grid gap-6">
         <NetWorthCard />
         <AllocationChart />
+        <CashflowCard />
       </div>
     </section>
   );
