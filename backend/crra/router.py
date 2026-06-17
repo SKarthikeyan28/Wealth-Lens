@@ -7,6 +7,7 @@ from backend.auth.dependencies import get_current_user
 from backend.auth.models import User
 from backend.common.database import get_db
 from backend.common.errors import AppError
+from backend.common.ratelimit import rate_limit
 from backend.crra.elicitation import ladder
 from backend.crra.schemas import (
     AllocationResponse,
@@ -67,7 +68,11 @@ async def get_profile(
     return RiskProfileResponse.model_validate(rp)
 
 
-@router.get("/allocation", response_model=AllocationResponse)
+@router.get(
+    "/allocation",
+    response_model=AllocationResponse,
+    dependencies=[Depends(rate_limit(limit=10, window=60, scope="crra_alloc"))],
+)
 async def get_allocation(
     start: date | None = None,
     end: date | None = None,
@@ -87,7 +92,11 @@ async def get_allocation(
     )
 
 
-@router.get("/frontier", response_model=FrontierResponse)
+@router.get(
+    "/frontier",
+    response_model=FrontierResponse,
+    dependencies=[Depends(rate_limit(limit=10, window=60, scope="crra_frontier"))],
+)
 async def get_frontier(
     start: date | None = None,
     end: date | None = None,

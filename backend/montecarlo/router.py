@@ -4,13 +4,18 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from backend.auth.dependencies import get_current_user
 from backend.auth.models import User
 from backend.common.database import get_db
+from backend.common.ratelimit import rate_limit
 from backend.montecarlo.schemas import ProjectionResponse, YearBandOut
 from backend.montecarlo.service import project_goal
 
 router = APIRouter(prefix="/projection", tags=["projection"])
 
 
-@router.get("/goal", response_model=ProjectionResponse)
+@router.get(
+    "/goal",
+    response_model=ProjectionResponse,
+    dependencies=[Depends(rate_limit(limit=10, window=60, scope="projection"))],
+)
 async def get_goal_projection(
     goal_amount: float,
     years: int,
