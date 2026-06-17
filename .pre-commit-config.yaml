@@ -5,6 +5,13 @@ repos:
       - id: ruff
         args: [--fix]
 
+  # Secret scanning — blocks committing API keys/tokens. CI enforcement is wired
+  # in Phase 6.2; this catches leaks at commit time locally.
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.18.4
+    hooks:
+      - id: gitleaks
+
   - repo: local
     hooks:
       - id: mypy
