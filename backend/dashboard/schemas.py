@@ -33,3 +33,18 @@ class ExpenseSummaryResponse(BaseModel):
     start: date
     end: date
     slices: list[ExpenseSummarySlice]
+
+
+class CashflowSummaryResponse(BaseModel):
+    base_currency: str
+    as_of: date
+    window_months: int
+    savings_rate: Decimal | None       # fraction, e.g. 0.4000 = 40%
+    monthly_expenses: Decimal
+    runway_months: Decimal | None      # None == no expenses (unbounded)
+    annual_expenses: Decimal
+    fi_number: Decimal
+    years_to_fi: float | None          # None == target never reached
+    # Assumptions echoed so the UI can surface exactly how the projection was made.
+    withdrawal_rate: Decimal
+    annual_real_return: Decimal

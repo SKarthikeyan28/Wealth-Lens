@@ -13,8 +13,10 @@ from backend.common.disclaimer import DISCLAIMER
 from backend.common.errors import AppError, app_error_handler
 from backend.common.logging import configure_logging
 from backend.common.middleware import CorrelationIdMiddleware
+from backend.crra.router import router as crra_router
 from backend.dashboard.router import router as dashboard_router
 from backend.ingestion.router import router as ingestion_router
+from backend.montecarlo.router import router as projection_router
 
 configure_logging()
 logger = logging.getLogger(__name__)
@@ -48,6 +50,8 @@ api_v1.include_router(expense_router)
 api_v1.include_router(holdings_router)
 api_v1.include_router(ingestion_router)
 api_v1.include_router(dashboard_router)
+api_v1.include_router(crra_router)
+api_v1.include_router(projection_router)
 
 
 @api_v1.get("/ping")

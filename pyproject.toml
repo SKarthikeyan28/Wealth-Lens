@@ -18,5 +18,12 @@ files = ["backend"]
 module = "backend.alembic.versions.*"
 disallow_untyped_calls = false
 
+# cvxpy ships an incomplete py.typed marker; skip following its imports and
+# ignore its types so strict mypy does not flag cp.quad_form / cp.psd_wrap etc.
+[[tool.mypy.overrides]]
+module = "cvxpy.*"
+ignore_missing_imports = true
+follow_imports = "skip"
+
 [tool.pytest.ini_options]
 testpaths = ["backend/tests"]

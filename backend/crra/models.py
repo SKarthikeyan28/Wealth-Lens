@@ -14,6 +14,10 @@ class RiskProfile(Base):
     __tablename__ = "risk_profile"
     __table_args__ = (
         CheckConstraint("crra_gamma > 0", name="ck_risk_profile_crra_gamma"),
+        CheckConstraint("crra_gamma_low >= 0", name="ck_risk_profile_gamma_low"),
+        CheckConstraint(
+            "crra_gamma_high >= crra_gamma_low", name="ck_risk_profile_gamma_band"
+        ),
         sa.UniqueConstraint("user_id", name="uq_risk_profile_user"),
     )
 
@@ -24,4 +28,6 @@ class RiskProfile(Base):
         nullable=False,
     )
     crra_gamma: Mapped[Decimal] = mapped_column(Numeric(6, 3), nullable=False)
+    crra_gamma_low: Mapped[Decimal] = mapped_column(Numeric(6, 3), nullable=False)
+    crra_gamma_high: Mapped[Decimal] = mapped_column(Numeric(6, 3), nullable=False)
     assessed_at: Mapped[datetime] = mapped_column(server_default=func.now())
