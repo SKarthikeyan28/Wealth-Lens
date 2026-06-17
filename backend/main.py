@@ -18,6 +18,7 @@ from backend.crra.router import router as crra_router
 from backend.dashboard.router import router as dashboard_router
 from backend.ingestion.router import router as ingestion_router
 from backend.montecarlo.router import router as projection_router
+from backend.privacy.router import router as privacy_router
 from backend.telegram.router import router as telegram_router
 
 configure_logging()
@@ -58,6 +59,7 @@ api_v1.include_router(crra_router)
 api_v1.include_router(projection_router)
 api_v1.include_router(chatbot_router)
 api_v1.include_router(telegram_router)
+api_v1.include_router(privacy_router)
 
 
 @api_v1.get("/ping")
