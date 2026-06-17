@@ -15,6 +15,7 @@ import backend.common.audit  # noqa: F401
 import backend.crra.models  # noqa: F401
 import backend.ingestion.models  # noqa: F401
 import backend.market.models  # noqa: F401
+import backend.telegram.models  # noqa: F401
 from backend.common.database import Base
 
 config = context.config
