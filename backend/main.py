@@ -13,11 +13,12 @@ from backend.chatbot.router import router as chatbot_router
 from backend.common.disclaimer import DISCLAIMER
 from backend.common.errors import AppError, app_error_handler
 from backend.common.logging import configure_logging
-from backend.common.middleware import CorrelationIdMiddleware
+from backend.common.middleware import CorrelationIdMiddleware, SecurityHeadersMiddleware
 from backend.crra.router import router as crra_router
 from backend.dashboard.router import router as dashboard_router
 from backend.ingestion.router import router as ingestion_router
 from backend.montecarlo.router import router as projection_router
+from backend.privacy.router import router as privacy_router
 from backend.telegram.router import router as telegram_router
 
 configure_logging()
@@ -29,16 +30,18 @@ app = FastAPI(
     version="0.1.0",
 )
 
+app.add_middleware(SecurityHeadersMiddleware)
 app.add_middleware(CorrelationIdMiddleware)
 
 # Dev default allows the Next.js dev server; override with CORS_ORIGINS in prod.
+# Methods/headers are narrowed to what the app actually uses — not "*".
 _cors_origins = os.environ.get("CORS_ORIGINS", "http://localhost:3000").split(",")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=_cors_origins,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type", "X-Correlation-ID"],
 )
 
 app.add_exception_handler(AppError, app_error_handler)
@@ -56,6 +59,7 @@ api_v1.include_router(crra_router)
 api_v1.include_router(projection_router)
 api_v1.include_router(chatbot_router)
 api_v1.include_router(telegram_router)
+api_v1.include_router(privacy_router)
 
 
 @api_v1.get("/ping")

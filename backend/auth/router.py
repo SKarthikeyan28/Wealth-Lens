@@ -27,11 +27,17 @@ from backend.auth.service import (
     verify_totp_login,
 )
 from backend.common.database import get_db
+from backend.common.ratelimit import rate_limit
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
-@router.post("/register", response_model=UserResponse, status_code=201)
+@router.post(
+    "/register",
+    response_model=UserResponse,
+    status_code=201,
+    dependencies=[Depends(rate_limit(limit=5, window=60, scope="auth_register"))],
+)
 async def register(
     payload: RegisterRequest, db: AsyncSession = Depends(get_db)
 ) -> UserResponse:
@@ -39,7 +45,11 @@ async def register(
     return UserResponse.model_validate(user)
 
 
-@router.post("/login", response_model=LoginResponse)
+@router.post(
+    "/login",
+    response_model=LoginResponse,
+    dependencies=[Depends(rate_limit(limit=5, window=60, scope="auth_login"))],
+)
 async def login(
     payload: LoginRequest, db: AsyncSession = Depends(get_db)
 ) -> LoginResponse:
