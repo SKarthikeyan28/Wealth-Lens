@@ -17,3 +17,4 @@ redis==5.0.4
 # `cvxpy` distribution pulls `ecos`, which has no aarch64 wheel and fails to build.
 cvxpy-base==1.5.3
 clarabel==0.11.1
+anthropic==0.109.2

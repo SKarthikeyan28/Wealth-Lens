@@ -9,6 +9,7 @@ from backend.accounts.router import holdings_router
 from backend.accounts.router import router as accounts_router
 from backend.auth.router import router as auth_router
 from backend.cashflow.router import expense_router, income_router
+from backend.chatbot.router import router as chatbot_router
 from backend.common.disclaimer import DISCLAIMER
 from backend.common.errors import AppError, app_error_handler
 from backend.common.logging import configure_logging
@@ -52,6 +53,7 @@ api_v1.include_router(ingestion_router)
 api_v1.include_router(dashboard_router)
 api_v1.include_router(crra_router)
 api_v1.include_router(projection_router)
+api_v1.include_router(chatbot_router)
 
 
 @api_v1.get("/ping")
