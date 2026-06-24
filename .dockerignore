@@ -1,0 +1,16 @@
+.git
+.gitignore
+**/__pycache__
+**/*.pyc
+.mypy_cache
+.ruff_cache
+.pytest_cache
+backend/tests
+frontend
+node_modules
+.env
+.env.*
+*.md
+!README.md
+requirements-dev.txt
+.pre-commit-config.yaml

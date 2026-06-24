@@ -1,0 +1,50 @@
+# syntax=docker/dockerfile:1
+
+# ---- Stage 1: builder ----------------------------------------------------
+# Carries the pip toolchain + build caches. None of this reaches runtime.
+# Pin by digest in CI for reproducibility:  python:3.12-slim@sha256:<digest>
+FROM python:3.12-slim AS builder
+
+# Build deps for any sdist that lacks an ARM wheel. asyncpg/cryptography/
+# clarabel all ship wheels, so this is a safety net; it stays in the builder.
+RUN apt-get update && apt-get install -y --no-install-recommends gcc \
+    && rm -rf /var/lib/apt/lists/*
+
+# Dedicated venv so we can copy a single self-contained tree to runtime.
+ENV VIRTUAL_ENV=/opt/venv
+RUN python -m venv "$VIRTUAL_ENV"
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+
+# Prod deps ONLY — no requirements-dev.txt.
+COPY backend/requirements.txt backend/requirements.txt
+RUN pip install --no-cache-dir -r backend/requirements.txt
+
+# ---- Stage 2: runtime ----------------------------------------------------
+FROM python:3.12-slim AS runtime
+
+# Non-root user; owns nothing it doesn't need.
+RUN useradd --create-home --uid 1000 appuser
+WORKDIR /app
+
+# Copy the ready-built venv from the builder; activate it via PATH.
+ENV VIRTUAL_ENV=/opt/venv
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+COPY --from=builder "$VIRTUAL_ENV" "$VIRTUAL_ENV"
+
+# Only what the app needs to run + migrate. No tests, no frontend, no .git.
+COPY backend/ backend/
+COPY alembic.ini alembic.ini
+
+# Don't write .pyc, flush logs immediately (better for container log capture).
+ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
+
+USER appuser
+EXPOSE 8000
+
+# slim has no curl; hit /health with stdlib so the check has zero extra deps.
+HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
+    CMD python -c "import urllib.request,sys; \
+        sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/health').status==200 else 1)"
+
+# No --reload. WEB_CONCURRENCY lets the platform tune worker count.
+CMD ["sh", "-c", "uvicorn backend.main:app --host 0.0.0.0 --port 8000 --workers ${WEB_CONCURRENCY:-2}"]

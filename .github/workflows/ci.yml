@@ -1,0 +1,83 @@
+name: CI
+
+# Run on every PR, and on direct pushes to main (the post-merge guard).
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  # ---- Job 1: lint + types + tests (on the runner, for speed) ------------
+  test:
+    name: Lint, type-check & test
+    runs-on: ubuntu-latest
+
+    # Real Postgres + Redis as service containers — your integration tests
+    # run `alembic upgrade head` against a real DB, not mocks.
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: wealthlens
+          POSTGRES_PASSWORD: wealthlens
+          POSTGRES_DB: wealthlens
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U wealthlens"
+          --health-interval 10s --health-timeout 5s --health-retries 5
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s --health-timeout 5s --health-retries 5
+
+    # Service containers are reachable on localhost via the mapped ports.
+    env:
+      DATABASE_URL: postgresql://wealthlens:wealthlens@localhost:5432/wealthlens
+      REDIS_URL: redis://localhost:6379/0
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: |
+            backend/requirements.txt
+            requirements-dev.txt
+      - name: Install dependencies
+        run: pip install -r backend/requirements.txt -r requirements-dev.txt
+      - name: make check (ruff + mypy + pytest)
+        run: make check
+
+  # ---- Job 2: prove the prod image still builds (parallel, for fidelity) -
+  docker-build:
+    name: Build production image
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - name: Build backend/Dockerfile.prod
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: backend/Dockerfile.prod
+          push: false               # build only — we deploy in 6.3
+          tags: wealth-lens-backend:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # ---- Job 3: secret scan (parallel) -------------------------------------
+  secret-scan:
+    name: Secret scan (gitleaks)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0           # full history so gitleaks scans all commits
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
