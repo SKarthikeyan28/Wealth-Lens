@@ -42,8 +42,10 @@ USER appuser
 EXPOSE 8000
 
 # slim has no curl; hit /health with stdlib so the check has zero extra deps.
+# Probe the platform-injected $PORT (falls back to 8000 locally).
 HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
-    CMD ["sh", "-c", "uvicorn backend.main:app --host 0.0.0.0 --port ${PORT:-8000} --workers ${WEB_CONCURRENCY:-2}"]
+    CMD python -c "import os,urllib.request,sys; p=os.environ.get('PORT','8000'); sys.exit(0 if urllib.request.urlopen(f'http://127.0.0.1:{p}/health').status==200 else 1)"
 
-# No --reload. WEB_CONCURRENCY lets the platform tune worker count.
-CMD ["sh", "-c", "uvicorn backend.main:app --host 0.0.0.0 --port 8000 --workers ${WEB_CONCURRENCY:-2}"]
+# No --reload. Migrate (idempotent) then serve; bind to platform-injected $PORT.
+# alembic runs once in this parent sh before uvicorn forks its --workers.
+CMD ["sh", "-c", "alembic upgrade head && uvicorn backend.main:app --host 0.0.0.0 --port ${PORT:-8000} --workers ${WEB_CONCURRENCY:-2}"]

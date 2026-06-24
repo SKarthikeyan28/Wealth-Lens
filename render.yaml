@@ -19,8 +19,8 @@ services:
     dockerContext: .
     plan: free
     healthCheckPath: /health
-    # Runs AFTER build, BEFORE traffic shifts to the new version.
-    preDeployCommand: "alembic upgrade head"
+    # preDeployCommand is paid-only; the migration runs in the container start
+    # command instead (alembic upgrade head && uvicorn ...) — see Dockerfile.prod.
     envVars:
       # Wired automatically from the managed resources above:
       - key: DATABASE_URL
