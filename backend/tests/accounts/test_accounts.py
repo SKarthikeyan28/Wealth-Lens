@@ -113,4 +113,4 @@ def test_create_requires_auth() -> None:
         resp = client.post("/api/v1/accounts", json={"name": "X", "account_type": "CASH"})
     app.dependency_overrides.clear()
 
-    assert resp.status_code == 403  # no bearer token → HTTPBearer rejects
+    assert resp.status_code == 401  # no bearer token → HTTPBearer rejects (401 Unauthorized)
