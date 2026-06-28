@@ -3,11 +3,15 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useSyncExternalStore } from "react";
 
-import { getAccessToken } from "./auth";
+import { getAccessToken, AUTH_EVENT } from "./auth";
 
 function subscribe(callback: () => void): () => void {
-  window.addEventListener("storage", callback);
-  return () => window.removeEventListener("storage", callback);
+  window.addEventListener("storage", callback); // cross-tab changes
+  window.addEventListener(AUTH_EVENT, callback); // same-tab login/logout
+  return () => {
+    window.removeEventListener("storage", callback);
+    window.removeEventListener(AUTH_EVENT, callback);
+  };
 }
 
 function serverSnapshot(): string | null {

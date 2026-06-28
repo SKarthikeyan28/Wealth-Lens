@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -101,6 +102,12 @@ export default function LoginPage() {
           >
             {busy ? "Signing in…" : "Sign in"}
           </button>
+          <p className="text-sm text-zinc-600">
+            No account yet?{" "}
+            <Link href="/register" className="underline">
+              Create one
+            </Link>
+          </p>
         </form>
       ) : (
         <form onSubmit={onVerify} className="mt-6 flex flex-col gap-4">
